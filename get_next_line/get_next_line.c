@@ -6,7 +6,7 @@
 /*   By: seunkim <seunkim@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/05/27 12:54:27 by seunkim           #+#    #+#             */
-/*   Updated: 2020/05/27 15:00:15 by seunkim          ###   ########.fr       */
+/*   Updated: 2020/05/27 16:23:57 by seunkim          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,22 +82,50 @@ char		*ft_strndup(char const *s, int n)
 	return (ptr);
 }
 
-int	get_next_line(char **line)
+int		check_error(char **buff, int fd)
 {
+	if (!(*buff = (char*)malloc(sizeof(char) * (128 + 1))))
+		return (0);
+	if (fd <= -1 || fd >= 6)
+		return (0);
+	return (1);
+}
+
+int		getlinestr(char **line, char **data, char **first_data)
+{
+	if (ft_strchr(*data, '\n'))
+	{
+		*line = ft_strndup(*data, ft_strchr(*data, '\n') - *data);
+		*data = ft_strchr(*data, '\n') + 1;
+		return (1);
+	}
+	else
+	{
+		*line = ft_strndup(*data, ft_strchr(*data, '\0') - *data);
+		free(*first_data);
+		*data = NULL;
+		return (0);
+	}
+}
+
+int		get_next_line(char **line)
+{
+	int		fd;
 	char		*buff;
 	static char	*data[8192];
 	char		*tmp;
 	ssize_t		bytes;
-	int		fd;
 
 	fd = 0;
-	if (!(buff = (char*)malloc(sizeof(char) * 1025)))
+	if (line == NULL)
+		return (-1);
+	if (!(check_error(&buff, fd)))
 		return (-1);
 	if (!data[fd])
 	{
 		data[fd] = ft_strndup("", 0);
-		while ((bytes = read(fd, buff, 1024)) > 0)
-		{	
+		while ((bytes = read(fd, buff, 128)) > 0)
+		{
 			buff[bytes] = '\0';
 			tmp = data[fd];
 			data[fd] = ft_strjoin(data[fd], buff);
@@ -106,17 +134,5 @@ int	get_next_line(char **line)
 		data[4096 + fd] = data[fd];
 	}
 	free(buff);
-	if (ft_strchr(data[fd], '\n'))
-	{
-		*line = ft_strndup(data[fd], ft_strchr(data[fd], '\n') - data[fd]);
-		data[fd] = ft_strchr(data[fd], '\n') + 1;
-		return (1);
-	}
-	else
-	{
-		*line = ft_strndup(data[fd], ft_strchr(data[fd], '\n') - data[fd]);
-		free(data[4096 + fd]);
-		data[fd] = NULL;
-		return (0);
-	}
+	return (getlinestr(&*line, &data[fd], &data[4096 + fd]));
 }
