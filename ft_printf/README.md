@@ -111,8 +111,14 @@ typedef struct	s_struct
 * '%'를 찾았을때 그 뒤에 있는 서식자(s, d, x)까지를 찾아주는 함수
 
 ### void init(t_struct *f, char *format, char conversion)
-# 구조체 초기화 해주는 함수
+* 구조체 초기화 해주는 함수
 
-###
+### void handlewidthandflag(t_struct *f, va_list ap)
+* width, dot, flag 저장하는 함수
 
+### void printstring(t_struct *f, va_list ap)
+* 문자열 출력
+
+### void pringnumber(t_struch *f, va_list ap)
+* 10진수 16진수 
 
