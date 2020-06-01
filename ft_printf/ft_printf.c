@@ -25,9 +25,6 @@ typedef struct	s_struct
 
 	int			nprinted;
 
-	int			minus;
-	int			zero;
-
 	int			width;
 	int			dot;
 	int			precision;
@@ -161,11 +158,106 @@ void	init(t_struct *f, char *format, char conversion)
 	f->format = format;
 	f->conversion = conversion;
 	f->nprinted = 0;
-	f->minus = 0;
-	f->zero = 0;
 	f->width = 0;
 	f->dot = 0;
 	f->precision = 0;
+}
+
+void 	printstring(t_struct *f, va_list ap)
+{
+	char 	*str;
+	int		len;
+	int		i;
+	// 문자열에 null 일떄 처리
+	if (!(str = va_arg(ap, char *)))
+		str = "(null)";
+	len = ft_strlen(str);
+	// presicion 처리
+	if (f->dot)
+	{
+		if (len < f->precision)
+			f->precision = len;
+	}
+	// presicion이 없을 때
+	else
+		f->precision = len;
+	i = 0;
+	// 공백 출력
+	if (f->width > f->precision)
+	{	
+		while (i < (f->width - f->precision))
+		{
+			write(1, " ", 1);
+			f->nprinted += 1;
+			i++;
+		}
+	}
+	ft_putnstr(str, f->precision);
+	f->nprinted += f->precision;
+}
+
+void	printnumber(t_struct *f, va_list ap)
+{
+	int 			num;
+	unsigned int 	unum;
+	int 			len;
+	int 			i;
+	num = 0;
+	unum = 0;
+	// 10진수 일때
+	if (f->conversion == 'd')
+	{
+		num = va_arg(ap, int);
+		len = ft_numlen(num);
+	}
+	// 16진수 일때
+	else if (f->conversion == 'x')
+	{
+		unum = va_arg(ap, unsigned int);
+		len = ft_hexlen(unum);
+	}
+	// %.d, 0 / %4.0d, 0 처리
+	if (((unum == 0 && num == 0) && f->dot && f->precision == 0))
+	{
+		i = 0;
+		while (i < f->width)
+		{
+			write(1, " ", 1);
+			f->nprinted++;
+			i++;
+		}
+		return ;
+	}
+	if (f->precision < len)
+		f->precision = len;
+	i = 0;
+	if (num < 0)
+		f->precision++;
+	// 공백
+	while (i < f->width - f->precision)
+	{
+		write(1, " ", 1);
+		f->nprinted++;
+		i++;
+	}
+	// 음수 '-' 처리
+	if (num < 0)
+	{
+		write(1, "-", 1);
+		len++;
+	}
+	// precision에 따라 0 출력
+	i = 0;
+	while (i < f->precision - len)
+	{
+		write(1, "0", 1);
+		i++;
+	}
+	if (f->conversion == 'd')
+		ft_putnbr(num);
+	else if (f->conversion == 'x')
+		ft_puthex(unum);
+	f->nprinted += f->precision;
 }
 
 // width '.' presicion 처리하기
@@ -189,101 +281,10 @@ void	handlewidthandflag(t_struct *f, va_list ap)
 	}
 	// 문자열 
 	if (f->conversion == 's')
-	{
-		char 	*str;
-		int		len;
-		int		i;
-
-		// 문자열에 null 일떄 처리
-		if (!(str = va_arg(ap, char *)))
-			str = "(null)";
-		len = ft_strlen(str);
-		// presicion 처리
-		if (f->dot)
-		{
-			if (len < f->precision)
-				f->precision = len;
-		}
-		// presicion이 없을 때
-		else
-			f->precision = len;
-		i = 0;
-		// 공백 출력
-		if (f->width > f->precision)
-		{	
-			while (i < (f->width - f->precision))
-			{
-				write(1, " ", 1);
-				f->nprinted += 1;
-				i++;
-			}
-		}
-		ft_putnstr(str, f->precision);
-		f->nprinted += f->precision;
-	}
-	// 10진수
+		printstring(f, ap);
+	// 10진수, 16진수
 	else if (f->conversion == 'd' || f->conversion == 'x')
-	{
-		int 			num;
-		unsigned int 	unum;
-		int 			len;
-		int 			i;
-
-		num = 0;
-		unum = 0;
-		if (f->conversion == 'd')
-		{
-			num = va_arg(ap, int);
-			len = ft_numlen(num);
-		}
-		else if (f->conversion == 'x')
-		{
-			unum = va_arg(ap, unsigned int);
-			len = ft_hexlen(unum);
-		}
-		// %.d, 0 / %4.0d, 0 처리
-		if (((unum == 0 && num == 0) && f->dot && f->precision == 0))
-		{
-			i = 0;
-			while (i < f->width)
-			{
-				write(1, " ", 1);
-				f->nprinted++;
-				i++;
-			}
-			return ;
-		}
-		if (f->precision < len)
-			f->precision = len;
-		i = 0;
-		if (num < 0)
-			f->precision++;
-		// 공백
-		while (i < f->width - f->precision)
-		{
-			write(1, " ", 1);
-			f->nprinted++;
-			i++;
-		}
-		// 음수 '-' 처리
-		if (num < 0)
-		{
-			write(1, "-", 1);
-			len++;
-		}
-		// precision에 따라 0 출력
-		i = 0;
-		while (i < f->precision - len)
-		{
-			write(1, "0", 1);
-			i++;
-		}
-		if (f->conversion == 'd')
-			ft_putnbr(num);
-		else if (f->conversion == 'x')
-			ft_puthex(unum);
-		f->nprinted += f->precision;
-	}
+		printnumber(f, ap);
 }
 
 // 서식자를 확인해서 처리해 주는 함수
@@ -317,8 +318,8 @@ int		checkformat(const char *s, va_list ap)
 		// %가 아닐때는 기본 출력 기능만 함.
 		else 
 		{
-				ret += 1;
-				write(1, &s[i], 1);
+			ret += 1;
+			write(1, &s[i], 1);
 		} 
 		i++;
 	}
