@@ -19,3 +19,58 @@ get_next_line.c, get_next_line.h
 * line도 해제 가능한 변수여야 한다.
 * get_next_line은 반복문에서 작동하고 한줄의 길이가 얼마든 간에 fd 안에 있는 텍스트가 끝날때까지 반복문을 돌면서 한줄씩 읽어 온다.
 * 우리가 만든 함수는 표준 출력, 파일에서도 잘 읽어와야 한다.
+
+## 메모리 누수 체크하기!
+* main 함수 마지막에 무한 루프 넣기
+~~~c
+while (1)
+{
+}
+~~~
+
+* 컴파일 하고 실행
+~~~shell
+./a.out
+~~~
+
+* 다른 터미널을 열고 ps 명령어 사용해서 pid 값 찾기
+~~~shell
+$ps
+~~~
+~~~
+PID TTY           TIME CMD
+  468 ttys004    0:00.04 /Applications/iTerm.app/Contents/MacOS/iTerm2 --server login -fp stevenkim
+  470 ttys004    0:00.58 -zsh
+  812 ttys005    0:00.51 /bin/zsh -l
+ 5351 ttys005    0:03.03 ./a.out
+~~~
+
+* pid 값 넣어서 테스트
+~~~shell
+while 1; do leaks 5351; sleep 3; clear; done
+~~~
+
+~~~
+~/Desktop/42/Exam_Rank_02/get_next_line
+Process:         a.out [5351]
+Path:            /Users/USER/Desktop/*/a.out
+Load Address:    0x10a757000
+Identifier:      a.out
+Version:         ???
+Code Type:       X86-64
+Parent Process:  zsh [812]
+
+Date/Time:       2020-06-01 23:37:29.540 +0900
+Launch Time:     2020-06-01 23:35:03.883 +0900
+OS Version:      Mac OS X 10.15.4 (19E266)
+Report Version:  7
+Analysis Tool:   /usr/bin/leaks
+
+Physical footprint:         300K
+Physical footprint (peak):  300K
+----
+
+leaks Report Version: 4.0
+Process 5351: 154 nodes malloced for 12 KB
+Process 5351: 0 leaks for 0 total leaked bytes
+~~~
