@@ -70,3 +70,49 @@ d    |1234
 ~~~shell
 ./a.out >> result.txt
 ~~~
+
+# 시험 대비
+## 구조체
+~~~c
+typedef struct	s_struct
+{
+	char		*format;
+
+	char		conversion;
+
+	int		nprinted;
+
+	int		width;
+	int		dot;
+	int		precision;
+}			t_struct;
+~~~
+## 만들어야 할 기본 함수
+* ft_strlen - 문자열 길이
+* ft_numlen - 10진수 길이
+* ft_hexlen - 16진수 길이 
+* ft_putnstr - 문자열 n만큼 출력
+* ft_putnbr - 10진수 출력
+* ft_puthex - 16진수 출력
+* ft_isdigit - 숫자인지 확인
+* ft_isprint - 출력가능한 문자인지 확인
+* ft_strchr - 문자열 중에서 문자를 찾으면 그 위치 리턴 없으면 널 리턴
+* ft_strndup - n 만큼 문자열 할당
+
+## 만들어야 할 커스텀 함수
+### int ft_printf(const char *s, ...)
+* 메인 함수
+* va_list, va_start, va_end 사용
+
+### int checkformat(const char *s, va_list ap)
+* 문자열 s를 while문으로 돌면서 '%'를 찾으면 처리해 주는 함수
+
+### char *findspecifier(const char *s)
+* '%'를 찾았을때 그 뒤에 있는 서식자(s, d, x)까지를 찾아주는 함수
+
+### void init(t_struct *f, char *format, char conversion)
+# 구조체 초기화 해주는 함수
+
+###
+
+
