@@ -80,12 +80,12 @@ typedef struct	s_struct
 
 	char		conversion;
 
-	int			nprinted;
+	int		nprinted;
 
-	int			width;
-	int			dot;
-	int			precision;
-}				t_struct;
+	int		width;
+	int		dot;
+	int		precision;
+}			t_struct;
 ~~~
 ## 만들어야 할 기본 함수
 * ft_strlen - 문자열 길이
@@ -102,7 +102,17 @@ typedef struct	s_struct
 ## 만들어야 할 커스텀 함수
 ### int ft_printf(const char *s, ...)
 * 메인 함수
+* va_list, va_start, va_end 사용
 
 ### int checkformat(const char *s, va_list ap)
+* 문자열 s를 while문으로 돌면서 '%'를 찾으면 처리해 주는 함수
+
+### char *findspecifier(const char *s)
+* '%'를 찾았을때 그 뒤에 있는 서식자(s, d, x)까지를 찾아주는 함수
+
+### void init(t_struct *f, char *format, char conversion)
+# 구조체 초기화 해주는 함수
+
+###
 
 
