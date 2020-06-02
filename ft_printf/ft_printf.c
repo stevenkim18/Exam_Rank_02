@@ -1,50 +1,35 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ft_printf.c                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: seunkim <seunkim@student.42seoul.kr>       +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/05/27 17:13:35 by seunkim           #+#    #+#             */
-/*   Updated: 2020/05/27 17:18:58 by seunkim          ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdarg.h>
 
 #include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include <unistd.h>
 
-typedef struct	s_struct
+// 9. 진수 숫자 출력 함수
+void	ft_putnbr_base(long long num, int base)
 {
-	char		*format;
+	char *dec = "0123456789";
+	char *hex = "0123456789abcdef";
 
-	char		conversion;
-
-	int			nprinted;
-
-	int			width;
-	int			dot;
-	int			precision;
-}				t_struct;
-
-// 문자열 길이
-int		ft_strlen(char *s)
-{
-	int		i;
-
-	i = 0;
-	while (s[i])
-		i++;
-	return (i);
+	if (num < 0)
+		num = -num;
+	if (num >= base)
+	{
+		ft_putnbr_base(num / base, base);
+		ft_putnbr_base(num % base, base);
+	}
+	else
+	{
+		if (base == 10)
+			write(1, &dec[num], 1);
+		else if (base == 16)
+			write(1, &hex[num], 1);
+	}
 }
 
-// 숫자 길이
-int		ft_numlen(int num)
+// 8. 숫자 길이 함수
+int	ft_numlen(int num)
 {
-	int		i;
+	int	i;
 
 	i = 1;
 	while (num /= 10)
@@ -52,290 +37,236 @@ int		ft_numlen(int num)
 	return (i);
 }
 
-// 16진수 길이
-int		ft_hexlen(unsigned int num)
+int 	ft_hexlen(unsigned int num)
 {
-	int		i;
-
+	int	i;
+	
 	i = 1;
 	while (num /= 16)
 		i++;
 	return (i);
 }
 
-// 문자열 출력
+// 7. n 만큼 문자열 출력 함수
 void	ft_putnstr(char *s, int n)
 {
-	int		i;
+	int	i;
 
 	i = 0;
 	while (s[i] && i < n)
-	{	
+	{
 		write(1, &s[i], 1);
 		i++;
 	}
 }
 
-// 10진수 출력
-void	ft_putnbr(long long num)
+// 6. 문자열 길이 함수
+int	ft_strlen(char *s)
 {
-	int		i;
-
+	int	i;
+	
 	i = 0;
-	if (num < 0)
-		num = -num;
-	if (num >= 10)
-	{
-		ft_putnbr(num / 10);
-		ft_putnbr(num % 10);
-	}
-	else
-	{
-		num += 48;
-		write(1, &num, 1);
-	}
+	while (s[i])
+		i++;
+	return (i);
 }
 
-// 16진수 출력
-void	ft_puthex(long long num)
+// 5. width dot precision 처리하고 출력하는 함수
+int	printwithflags(char *f, char conversion, va_list ap)
 {
-	char *hex;
+	int	width;
+	int	dot;
+	int	precision;
+	int	nprinted;
+	int	i;
 
-	hex = "0123456789abcdef";
-	if (num < 0)
-		num = -num;
-	if (num >= 16)
+	width = 0;
+	dot = 0;
+	precision = 0;
+	nprinted = 0;
+	i = 0;
+	while (f[i])
 	{
-		ft_puthex(num / 16);
-		ft_puthex(num % 16);
+		if ((f[i] >= '0' && f[i] <= '9') && !dot)
+			width = (width * 10) + (f[i] - 48);
+		else if (f[i] == '.')
+			dot = 1;
+		else if ((f[i] >= '0' && f[i] <= '9') && dot)
+			precision = (precision * 10) + (f[i] - 48);
+		i++;
 	}
-	else 
-		write(1, &hex[num], 1);
+	//printf("%d %d %d\n", width, dot, precision);
+	
+	char		*str;
+	int		num;
+	unsigned int 	unum;
+	int		len;
+	
+	num = 0;
+	unum = 0;
+	len = 0;
+	if (conversion == 's')
+	{
+		if (!(str = va_arg(ap, char *)))
+			str = "(null)";
+		len = ft_strlen(str);
+		if (dot)
+		{
+			if (len < precision)
+				precision = len;
+		}
+		else	// . 이 없으면 pre = 0이기 떄문에
+			precision = len;
+		i = 0;	// 공백 출력
+		while (i < width - precision)
+		{
+			write(1, " ", 1);
+			nprinted++;
+			i++;
+		}
+		nprinted += precision;
+		ft_putnstr(str, precision);
+	}
+	else if (conversion == 'd' || conversion == 'x')
+	{
+		if (conversion == 'd')
+		{
+			num = va_arg(ap, int);
+			len = ft_numlen(num);
+		}
+		else if (conversion == 'x')
+		{
+			unum = va_arg(ap, unsigned int);
+			len = ft_hexlen(unum);
+		}
+		if (num == 0 && unum == 0 && dot && precision == 0) // 예외처리
+		{
+			i = 0;
+			while (i < width)
+			{
+				write(1, " ", 1);
+				nprinted++;
+				i++;
+			}
+			return (nprinted);
+		}
+		if (precision < len)
+			precision = len;
+		if (num < 0)	// 공백 처리
+			precision++;
+		i = 0;
+		while (i < width - precision)
+		{
+			write(1, " ", 1);
+			nprinted++;
+			i++;
+		}
+		if (num < 0) // '-' 출력
+		{
+			write(1, "-", 1);
+			len++;
+		}
+		i = 0;	    // 0 처리
+		while (i < precision - len)
+		{
+			write(1, "0", 1);
+			i++;
+		}
+		nprinted += precision;
+		if (conversion == 'd')
+			ft_putnbr_base(num, 10);
+		else if (conversion == 'x')
+			ft_putnbr_base(unum, 16);
+	}
+	free(f);
+	return (nprinted);
 }
 
-// n만큼 까지 문자열 할당 함수
-char	*ft_strndup(char const *s, int n)
+// 4. n 길이 만큼 새로운 문자열 할당 함수
+char	*ft_strndup(char *s, int n)
 {
-	int 	i;
-	char	*ptr;
+	int	i;
+	char 	*ptr;
 
-	i = 0;
-	if (!(ptr = (char*)malloc(sizeof(char) * (n + 1))))
+	if (!(ptr = (char *)malloc(sizeof(char *) * (n + 1))))
 		return (NULL);
-	while (i < n)
+	i = 0;
+	while (s[i] && i < n)
 	{
 		ptr[i] = s[i];
 		i++;
 	}
 	ptr[i] = '\0';
-	return (ptr); 
+	return (ptr);
 }
 
-// 서식자를 찾아서 리턴하는 함수
-char	*findspecifier(const char *s)
+// 3. 서식자의 위치를 찾아주는 함수
+char	*findsdx(char *s)
 {
-	int		i;
-	char	*conversion;
-
+	int	i;
+	
 	i = 0;
-	// 숫자랑 '.' 만 포함.
-	while (s[i] && (isdigit(s[i]) || s[i] == '.'))
+	while (s[i] && ((s[i] >= '0' && s[i] <= '9') || s[i] == '.'))
 		i++;
-	if (isprint(s[i]))
+	if (s[i] >= 32 && s[i] <= 126)
 	{
-		conversion = strchr("sdx", s[i]);
-		if (conversion)
-			return ((char*)s + i);
+		//printf("s[i] = %c\n", s[i]);
+		if (s[i] == 's' || s[i] == 'd' || s[i] == 'x')
+			return (s + i);
 		else
 			return (NULL);
 	}
 	return (NULL);
-}
+}	
 
-// 구조체 초기화
-void	init(t_struct *f, char *format, char conversion)
+// 2. %를 찾아서 처리해주는 함수
+int	checkformat(va_list ap, char *s)
 {
-	f->format = format;
-	f->conversion = conversion;
-	f->nprinted = 0;
-	f->width = 0;
-	f->dot = 0;
-	f->precision = 0;
-}
-
-void 	printstring(t_struct *f, va_list ap)
-{
-	char 	*str;
-	int		len;
-	int		i;
-	// 문자열에 null 일떄 처리
-	if (!(str = va_arg(ap, char *)))
-		str = "(null)";
-	len = ft_strlen(str);
-	// presicion 처리
-	if (f->dot)
-	{
-		if (len < f->precision)
-			f->precision = len;
-	}
-	// presicion이 없을 때
-	else
-		f->precision = len;
-	i = 0;
-	// 공백 출력
-	if (f->width > f->precision)
-	{	
-		while (i < (f->width - f->precision))
-		{
-			write(1, " ", 1);
-			f->nprinted += 1;
-			i++;
-		}
-	}
-	ft_putnstr(str, f->precision);
-	f->nprinted += f->precision;
-}
-
-void	printnumber(t_struct *f, va_list ap)
-{
-	int 			num;
-	unsigned int 	unum;
-	int 			len;
-	int 			i;
-	num = 0;
-	unum = 0;
-	// 10진수 일때
-	if (f->conversion == 'd')
-	{
-		num = va_arg(ap, int);
-		len = ft_numlen(num);
-	}
-	// 16진수 일때
-	else if (f->conversion == 'x')
-	{
-		unum = va_arg(ap, unsigned int);
-		len = ft_hexlen(unum);
-	}
-	// %.d, 0 / %4.0d, 0 처리
-	if (((unum == 0 && num == 0) && f->dot && f->precision == 0))
-	{
-		i = 0;
-		while (i < f->width)
-		{
-			write(1, " ", 1);
-			f->nprinted++;
-			i++;
-		}
-		return ;
-	}
-	if (f->precision < len)
-		f->precision = len;
-	i = 0;
-	if (num < 0)
-		f->precision++;
-	// 공백
-	while (i < f->width - f->precision)
-	{
-		write(1, " ", 1);
-		f->nprinted++;
-		i++;
-	}
-	// 음수 '-' 처리
-	if (num < 0)
-	{
-		write(1, "-", 1);
-		len++;
-	}
-	// precision에 따라 0 출력
-	i = 0;
-	while (i < f->precision - len)
-	{
-		write(1, "0", 1);
-		i++;
-	}
-	if (f->conversion == 'd')
-		ft_putnbr(num);
-	else if (f->conversion == 'x')
-		ft_puthex(unum);
-	f->nprinted += f->precision;
-}
-
-// width '.' presicion 처리하기
-void	handlewidthandflag(t_struct *f, va_list ap)
-{
-	int		i;
-
-	i = 0;
-	while (f->format[i])
-	{
-		// witdh
-		if (isdigit(f->format[i]) && !(f->dot))
-			f->width = (f->width) * 10 + (f->format[i] - 48);
-		// flag ','
-		else if (f->format[i] == '.' && !(f->dot))
-			f->dot = 1;
-		// presicion
-		else if (isdigit(f->format[i]) && (f->dot))
-			f->precision = (f->precision) * 10 + (f->format[i] - 48);
-		i++;
-	}
-	// 문자열 
-	if (f->conversion == 's')
-		printstring(f, ap);
-	// 10진수, 16진수
-	else if (f->conversion == 'd' || f->conversion == 'x')
-		printnumber(f, ap);
-}
-
-// 서식자를 확인해서 처리해 주는 함수
-int		checkformat(const char *s, va_list ap)
-{
-	int			i;
-	int 		ret;
-	t_struct	*f;
-	char		*tmp;
-
+	int	i;
+	char	*conversion;
+	int	ret;
+	char	*format;
+	
 	ret = 0;
-	if (!(f = (t_struct*)malloc(sizeof(t_struct))))
-		return (0);
 	i = 0;
 	while (s[i])
 	{
 		if (s[i] == '%')
 		{
-			// % 다음 부터 찾기
-			tmp = findspecifier(s + i + 1);
-			if (tmp)
-			{
-				init(f, ft_strndup(s + i, (tmp + 1) - (s + i)), *tmp);
-				handlewidthandflag(f, ap);
-				i = i + ((tmp) - (s + i));
-				ret += f->nprinted;
+			conversion = findsdx(s + i + 1);
+			//printf("con = %c\n", *conversion);
+			if (conversion)
+			{	// fstrndup s + i 하는 것이 포인트!
+				format = ft_strndup(s + i, (conversion + 1) - (s + i));
+				//printf("format = %s\n", format);
+				ret += printwithflags(format, *conversion, ap);
+				i += ((conversion) - (s + i));
 			}
-			else
+			else	// sdx가 없을 때 한 칸 앞으로
 				i++;
 		}
-		// %가 아닐때는 기본 출력 기능만 함.
-		else 
+		else // % 없는 문자는 그냥 출력
 		{
-			ret += 1;
 			write(1, &s[i], 1);
-		} 
+			ret++;
+		}
 		i++;
 	}
 	return (ret);
 }
 
-// 프로토타입 함수
-int		ft_printf(const char *s, ...)
+// 1. 프로토 타입 함수
+int	ft_printf(const char *s, ...)
 {
-	va_list ap;
-	int 	ret;
+	int	ret;
+	va_list	ap;
 
 	if (!s)
-		return (0);
+		return (-1);
 	va_start(ap, s);
-	ret = checkformat(s, ap);
+	// 상수 타입을 일반 타입으로 변환 중요!!
+	ret = checkformat(ap, (char *)s);
 	va_end(ap);
 	return (ret);
 }
+
