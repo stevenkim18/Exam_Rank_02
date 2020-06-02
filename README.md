@@ -24,3 +24,7 @@ examshell
 set nu    // 라인 번호 
 syntax on // 글자 색상
 ~~~
+
+## printf 합격 github
+* https://github.com/juanlamarao/42_exam_rank_02/tree/master/ft_printf
+
