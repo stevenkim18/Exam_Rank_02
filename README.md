@@ -27,4 +27,8 @@ syntax on // 글자 색상
 
 ## printf 합격 github
 * https://github.com/juanlamarao/42_exam_rank_02/tree/master/ft_printf
-
+* https://github.com/HappyTramp/exam_rank_02/tree/master/rendu/ft_printf
+* https://github.com/drisshaou/ft_printf_exam_rank_02/blob/master/ft_printf.c
+* https://github.com/MikelTolino/exam_rank_02/tree/master/ft_printf
+* https://github.com/solaldunckel/exam_rank_02/blob/master/1-ft_printf/ft_printf.c
+* https://github.com/taelee42/42exam_rank02/tree/master/ft_printf
