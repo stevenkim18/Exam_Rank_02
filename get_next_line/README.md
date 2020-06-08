@@ -74,3 +74,14 @@ leaks Report Version: 4.0
 Process 5351: 154 nodes malloced for 12 KB
 Process 5351: 0 leaks for 0 total leaked bytes
 ~~~
+
+
+## 문제 풀이 순서
+1. get_next_line.h 파일 만들기
+2. 함수 만들기
+    - ft_strlen
+    - ft_strjoin
+    - ft_strchr
+    - ft_strudup
+3. 입력한 데이터를 static 변수에 저장되었는지 확인하기
+4. main 함수를 만들어서 제대로 함수가 동작하는지 확인.
